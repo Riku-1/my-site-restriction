@@ -7,6 +7,14 @@
   "background": {
     "scripts": ["background.js"]
   },
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["media.js"],
+      "all_frames": true,
+      "run_at": "document_start"
+    }
+  ],
   "options_ui": {
     "page": "options.html",
     "open_in_tab": true
