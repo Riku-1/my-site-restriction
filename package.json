@@ -7,9 +7,9 @@
     "sync-version": "node scripts/sync-version.js",
     "lint": "web-ext lint --source-dir .",
     "prebuild": "npm run sync-version",
-    "build": "web-ext build --source-dir . --artifacts-dir web-ext-artifacts --overwrite-dest --ignore-files .idea package.json package-lock.json node_modules web-ext-artifacts scripts README.md",
+    "build": "web-ext build --source-dir . --artifacts-dir web-ext-artifacts --overwrite-dest --ignore-files .idea package.json package-lock.json node_modules web-ext-artifacts scripts README.md .amo-upload-uuid",
     "presign": "npm run sync-version",
-    "sign": "web-ext sign --source-dir . --artifacts-dir web-ext-artifacts --channel=unlisted --ignore-files .idea package.json package-lock.json node_modules web-ext-artifacts scripts README.md"
+    "sign": "web-ext sign --source-dir . --artifacts-dir web-ext-artifacts --channel=unlisted --ignore-files .idea package.json package-lock.json node_modules web-ext-artifacts scripts README.md .amo-upload-uuid"
   },
   "devDependencies": {
     "web-ext": "^8.5.0"
