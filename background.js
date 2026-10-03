@@ -163,5 +163,17 @@ browser.storage.onChanged.addListener((changes) => {
   if (changes.sites) enqueue(track);
 });
 
+// ツールバーのボタンを押すと設定画面を開く（既に開いていればそのタブに移動）
+browser.action.onClicked.addListener(async () => {
+  const url = browser.runtime.getURL('options.html');
+  const [existing] = await browser.tabs.query({ url });
+  if (existing) {
+    await browser.tabs.update(existing.id, { active: true });
+    await browser.windows.update(existing.windowId, { focused: true });
+  } else {
+    await browser.tabs.create({ url });
+  }
+});
+
 browser.runtime.onStartup.addListener(() => enqueue(clearSession));
 browser.runtime.onInstalled.addListener(() => enqueue(clearSession));

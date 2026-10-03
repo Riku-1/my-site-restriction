@@ -1,9 +1,12 @@
 {
   "manifest_version": 3,
   "name": "Site Time Limit",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "description": "サイトごとに1日の利用時間の上限を設定し、超えたら閲覧をブロックします",
   "permissions": ["tabs", "storage", "alarms", "idle"],
+  "action": {
+    "default_title": "Site Time Limit 設定"
+  },
   "background": {
     "scripts": ["background.js"]
   },
