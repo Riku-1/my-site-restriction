@@ -8,8 +8,20 @@ function dayKey(time = Date.now()) {
 }
 
 async function main() {
-  const domain = new URLSearchParams(location.search).get('d') ?? '';
+  const params = new URLSearchParams(location.search);
+  const domain = params.get('d') ?? '';
+  const reason = params.get('r') ?? 'limit';
+
   document.getElementById('domain').textContent = domain;
+
+  if (reason === 'ban') {
+    document.getElementById('title').textContent = '今すぐ禁止されています';
+    document.getElementById('hint').textContent = '設定画面で禁止を解除すると再び利用できます。';
+    return;
+  }
+
+  document.getElementById('title').textContent = '今日の利用時間の上限に達しました';
+  document.getElementById('hint').textContent = '明日また利用できます。';
 
   const { sites = [], usage = {} } = await browser.storage.local.get(['sites', 'usage']);
   const site = sites.find((s) => s.domain === domain);

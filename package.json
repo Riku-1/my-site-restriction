@@ -1,6 +1,6 @@
 {
   "name": "site-time-limit",
-  "version": "1.2.0",
+  "version": "1.4.0",
   "private": true,
   "description": "Firefox extension that limits daily time spent on specific sites",
   "scripts": {

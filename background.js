@@ -86,12 +86,8 @@ async function collectTargets(sites, playing, now) {
 
 async function track() {
   const now = Date.now();
-  const { sites = [], usage = {}, session = null, playing = {} } = await browser.storage.local.get([
-    'sites',
-    'usage',
-    'session',
-    'playing',
-  ]);
+  const { sites = [], bans = [], usage = {}, session = null, playing = {} } =
+    await browser.storage.local.get(['sites', 'bans', 'usage', 'session', 'playing']);
 
   // 直前の計測区間を、そのときの対象ドメインすべてに加算する
   if (session) {
@@ -116,10 +112,25 @@ async function track() {
   for (const { rule, tabs } of targets.values()) {
     const spent = usage[dayKey(now)]?.[rule.domain] ?? 0;
     if (spent < rule.limitMinutes * 60 * 1000) continue;
-    const url = browser.runtime.getURL(`blocked.html?d=${encodeURIComponent(rule.domain)}`);
-    for (const tab of tabs) {
-      await browser.tabs.update(tab.id, { url }).catch(() => {});
-    }
+    await blockTabs(tabs, rule.domain, 'limit');
+  }
+
+  // 今すぐ禁止: 時間に関係なく、有効なサイトのタブはすべてブロックする（背景タブ・新規遷移も対象）
+  for (const ban of bans) {
+    if (!ban.enabled) continue;
+    const tabs = await browser.tabs.query({
+      url: [`*://${ban.domain}/*`, `*://*.${ban.domain}/*`],
+    });
+    await blockTabs(tabs, ban.domain, 'ban');
+  }
+}
+
+async function blockTabs(tabs, domain, reason) {
+  const url = browser.runtime.getURL(
+    `blocked.html?d=${encodeURIComponent(domain)}&r=${reason}`,
+  );
+  for (const tab of tabs) {
+    await browser.tabs.update(tab.id, { url }).catch(() => {});
   }
 }
 
@@ -160,7 +171,7 @@ browser.idle.setDetectionInterval(60);
 browser.idle.onStateChanged.addListener(() => enqueue(track));
 
 browser.storage.onChanged.addListener((changes) => {
-  if (changes.sites) enqueue(track);
+  if (changes.sites || changes.bans) enqueue(track);
 });
 
 // ツールバーのボタンを押すと設定画面を開く（既に開いていればそのタブに移動）

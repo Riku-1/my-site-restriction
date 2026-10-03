@@ -8,6 +8,8 @@
     :root { color-scheme: light dark; }
     body { font-family: system-ui, sans-serif; max-width: 640px; margin: 2rem auto; padding: 0 1rem; }
     h1 { font-size: 1.4rem; }
+    h2 { font-size: 1.1rem; margin-top: 2.5rem; }
+    p.note { opacity: .7; font-size: .9rem; margin: .3rem 0 1rem; }
     form { display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
     input { padding: .4rem .6rem; font-size: 1rem; }
     input[name="domain"] { flex: 1 1 220px; }
@@ -18,6 +20,7 @@
     td.num { text-align: right; font-variant-numeric: tabular-nums; }
     .empty { opacity: .6; padding: 1rem 0; }
     .error { color: #c00; min-height: 1.2em; }
+    .ban-on { color: #c00; font-weight: bold; }
   </style>
 </head>
 <body>
@@ -37,6 +40,23 @@
     <tbody id="list"></tbody>
   </table>
   <div id="empty" class="empty" hidden>まだ制限しているサイトはありません。</div>
+
+  <h2>今すぐ禁止</h2>
+  <p class="note">時間に関係なく即ブロックします。「禁止中」のスイッチでいつでもオン・オフできます。</p>
+
+  <form id="ban-form">
+    <input name="domain" placeholder="例: example.com" required>
+    <button type="submit">禁止リストに追加</button>
+  </form>
+  <div id="ban-error" class="error"></div>
+
+  <table>
+    <thead>
+      <tr><th>サイト</th><th>状態</th><th></th></tr>
+    </thead>
+    <tbody id="ban-list"></tbody>
+  </table>
+  <div id="ban-empty" class="empty" hidden>禁止しているサイトはありません。</div>
 
   <script src="options.js"></script>
 </body>
