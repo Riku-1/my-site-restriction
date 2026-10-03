@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Site Time Limit",
-  "version": "1.0.0",
+  "version": "1.1.1",
   "description": "サイトごとに1日の利用時間の上限を設定し、超えたら閲覧をブロックします",
   "permissions": ["tabs", "storage", "alarms", "idle"],
   "background": {
@@ -22,7 +22,13 @@
   "browser_specific_settings": {
     "gecko": {
       "id": "site-time-limit@local",
-      "strict_min_version": "128.0"
+      "strict_min_version": "140.0",
+      "data_collection_permissions": {
+        "required": ["none"]
+      }
+    },
+    "gecko_android": {
+      "strict_min_version": "142.0"
     }
   }
 }
