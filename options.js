@@ -65,11 +65,15 @@ async function load() {
 
 async function loadBans() {
   const { bans = [] } = await browser.storage.local.get('bans');
+  const { unbanned = {} } = await browser.storage.session.get('unbanned');
 
   banList.replaceChildren();
   banEmpty.hidden = bans.length > 0;
 
   for (const ban of bans) {
+    // 禁止中かどうか: 登録済みで、かつ今回の起動中に解除されていないもの
+    const banned = ban.enabled !== false && !unbanned[ban.domain];
+
     const tr = document.createElement('tr');
 
     const tdDomain = document.createElement('td');
@@ -79,11 +83,17 @@ async function loadBans() {
     const label = document.createElement('label');
     const toggle = document.createElement('input');
     toggle.type = 'checkbox';
-    toggle.checked = ban.enabled;
-    toggle.addEventListener('change', () => setBanEnabled(ban.domain, toggle.checked));
+    toggle.checked = banned;
+    toggle.addEventListener('change', () => setBanned(ban.domain, toggle.checked));
     const text = document.createElement('span');
-    text.textContent = ban.enabled ? ' 禁止中' : ' 解除';
-    text.className = ban.enabled ? 'ban-on' : '';
+    if (banned) {
+      text.textContent = ' 禁止中';
+      text.className = 'ban-on';
+    } else if (ban.enabled === false) {
+      text.textContent = ' 解除';
+    } else {
+      text.textContent = ' 解除中（再起動まで）';
+    }
     label.append(toggle, text);
     tdToggle.append(label);
 
@@ -113,16 +123,27 @@ async function removeSite(domain) {
   load();
 }
 
-async function setBanEnabled(domain, enabled) {
+// banned=false: 解除（ブラウザを再起動するまで利用可能）
+// banned=true : 禁止に戻す
+async function setBanned(domain, banned) {
   const { bans = [] } = await browser.storage.local.get('bans');
-  const next = bans.map((b) => (b.domain === domain ? { ...b, enabled } : b));
+  const next = bans.map((b) => (b.domain === domain ? { domain } : b));
   await browser.storage.local.set({ bans: next });
+
+  const { unbanned = {} } = await browser.storage.session.get('unbanned');
+  if (banned) delete unbanned[domain];
+  else unbanned[domain] = true;
+  await browser.storage.session.set({ unbanned });
   loadBans();
 }
 
 async function removeBan(domain) {
   const { bans = [] } = await browser.storage.local.get('bans');
   await browser.storage.local.set({ bans: bans.filter((b) => b.domain !== domain) });
+
+  const { unbanned = {} } = await browser.storage.session.get('unbanned');
+  delete unbanned[domain];
+  await browser.storage.session.set({ unbanned });
   loadBans();
 }
 
@@ -160,9 +181,14 @@ banForm.addEventListener('submit', async (e) => {
 
   const { bans = [] } = await browser.storage.local.get('bans');
   const next = bans.filter((b) => b.domain !== domain);
-  next.push({ domain, enabled: true });
+  next.push({ domain });
   next.sort((a, b) => a.domain.localeCompare(b.domain));
   await browser.storage.local.set({ bans: next });
+
+  // 追加したときは必ず禁止中にする
+  const { unbanned = {} } = await browser.storage.session.get('unbanned');
+  delete unbanned[domain];
+  await browser.storage.session.set({ unbanned });
 
   banForm.reset();
   loadBans();
@@ -170,7 +196,7 @@ banForm.addEventListener('submit', async (e) => {
 
 browser.storage.onChanged.addListener((changes) => {
   if (changes.sites || changes.usage) load();
-  if (changes.bans) loadBans();
+  if (changes.bans || changes.unbanned) loadBans();
 });
 
 load();

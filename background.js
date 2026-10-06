@@ -115,9 +115,11 @@ async function track() {
     await blockTabs(tabs, rule.domain, 'limit');
   }
 
-  // 今すぐ禁止: 時間に関係なく、有効なサイトのタブはすべてブロックする（背景タブ・新規遷移も対象）
+  // 今すぐ禁止: 時間に関係なく、禁止中のサイトのタブはすべてブロックする（背景タブ・新規遷移も対象）
+  // 解除は storage.session に記録する。ブラウザを再起動すると session は消えるので、再び禁止に戻る
+  const { unbanned = {} } = await browser.storage.session.get('unbanned');
   for (const ban of bans) {
-    if (!ban.enabled) continue;
+    if (ban.enabled === false || unbanned[ban.domain]) continue;
     const tabs = await browser.tabs.query({
       url: [`*://${ban.domain}/*`, `*://*.${ban.domain}/*`],
     });
@@ -171,7 +173,7 @@ browser.idle.setDetectionInterval(60);
 browser.idle.onStateChanged.addListener(() => enqueue(track));
 
 browser.storage.onChanged.addListener((changes) => {
-  if (changes.sites || changes.bans) enqueue(track);
+  if (changes.sites || changes.bans || changes.unbanned) enqueue(track);
 });
 
 // ツールバーのボタンを押すと設定画面を開く（既に開いていればそのタブに移動）
